@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "routes": [
+    { "src": "/", "dest": "/api/login" },
+    { "src": "/login", "dest": "/api/login" },
+    { "src": "/send-magic-link", "dest": "/api/send-magic-link" },
+    { "src": "/auth/callback", "dest": "/api/auth/callback" }
+  ]
+}
