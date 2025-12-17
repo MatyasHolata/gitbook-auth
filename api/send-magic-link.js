@@ -19,7 +19,7 @@ export default async function handler(req, res) {
   const email = params.get('email')?.toLowerCase().trim();
 
   if (!email) {
-    return res.redirect('/login?error=' + encodeURIComponent('Zadej email'));
+    return res.redirect('/login?error=' + encodeURIComponent('Please enter your email'));
   }
 
   // Check if email is in whitelist
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
     .single();
 
   if (whitelistError || !allowedEmail) {
-    return res.redirect('/login?error=' + encodeURIComponent('Tento email nemá povolen přístup'));
+    return res.redirect('/login?error=' + encodeURIComponent('This email is not authorized'));
   }
 
   // Send magic link
@@ -43,7 +43,7 @@ export default async function handler(req, res) {
 
   if (authError) {
     console.error('Auth error:', authError);
-    return res.redirect('/login?error=' + encodeURIComponent('Chyba při odesílání emailu. Zkus to znovu.'));
+    return res.redirect('/login?error=' + encodeURIComponent('Error sending email. Please try again.'));
   }
 
   return res.redirect('/login?success=1');
