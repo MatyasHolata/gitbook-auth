@@ -4,11 +4,11 @@ export default function handler(req, res) {
   
   const html = `
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Přihlášení - Upcomers Academy</title>
+  <title>Login - Upcomers Academy</title>
   <style>
     * {
       margin: 0;
@@ -100,17 +100,17 @@ export default function handler(req, res) {
 <body>
   <div class="container">
     <h1>Upcomers Academy</h1>
-    <p>Pro přístup k dokumentaci zadej svůj email</p>
+    <p>Enter your email to access the documentation</p>
     
     ${error ? `<div class="error">${decodeURIComponent(error)}</div>` : ''}
-    ${success ? `<div class="success">Odkaz odeslán! Zkontroluj svůj email (i spam).</div>` : ''}
+    ${success ? `<div class="success">Link sent! Check your email (including spam folder).</div>` : ''}
     
     <form action="/send-magic-link" method="POST">
       <div class="form-group">
         <label for="email">Email</label>
-        <input type="email" id="email" name="email" required placeholder="tvuj@email.cz">
+        <input type="email" id="email" name="email" required placeholder="your@email.com">
       </div>
-      <button type="submit">Poslat přihlašovací odkaz</button>
+      <button type="submit">Send login link</button>
     </form>
   </div>
 </body>
