@@ -7,34 +7,53 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
-  const { code, error, error_description } = req.query;
+  const { code, token_hash, type, error, error_description } = req.query;
 
   if (error) {
     console.error('Auth error:', error, error_description);
-    return res.redirect('/login?error=' + encodeURIComponent('Přihlášení selhalo. Zkus to znovu.'));
+    return res.redirect('/login?error=' + encodeURIComponent('Login failed. Please try again.'));
   }
 
-  if (!code) {
-    return res.redirect('/login?error=' + encodeURIComponent('Neplatný odkaz'));
+  let session = null;
+
+  // Handle PKCE flow (code)
+  if (code) {
+    const { data, error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
+    if (sessionError) {
+      console.error('Session error:', sessionError);
+      return res.redirect('/login?error=' + encodeURIComponent('Login failed. Please try again.'));
+    }
+    session = data;
+  }
+  // Handle magic link flow (token_hash)
+  else if (token_hash && type === 'magiclink') {
+    const { data, error: verifyError } = await supabase.auth.verifyOtp({
+      token_hash,
+      type: 'magiclink'
+    });
+    if (verifyError) {
+      console.error('Verify error:', verifyError);
+      return res.redirect('/login?error=' + encodeURIComponent('Invalid or expired link.'));
+    }
+    session = data;
+  }
+  else {
+    return res.redirect('/login?error=' + encodeURIComponent('Invalid link'));
   }
 
-  // Exchange code for session
-  const { data, error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
-
-  if (sessionError || !data.user) {
-    console.error('Session error:', sessionError);
-    return res.redirect('/login?error=' + encodeURIComponent('Přihlášení selhalo. Zkus to znovu.'));
+  if (!session?.user) {
+    return res.redirect('/login?error=' + encodeURIComponent('Login failed.'));
   }
 
   // Double-check whitelist (security)
   const { data: allowedEmail } = await supabase
     .from('allowed_emails')
     .select('email')
-    .eq('email', data.user.email.toLowerCase())
+    .eq('email', session.user.email.toLowerCase())
     .single();
 
   if (!allowedEmail) {
-    return res.redirect('/login?error=' + encodeURIComponent('Tento email nemá povolen přístup'));
+    return res.redirect('/login?error=' + encodeURIComponent('This email is not authorized'));
   }
 
   // Generate JWT for GitBook
@@ -42,7 +61,7 @@ export default async function handler(req, res) {
   const gitbookUrl = process.env.GITBOOK_URL;
 
   const jwt = await new jose.SignJWT({
-    email: data.user.email
+    email: session.user.email
   })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
